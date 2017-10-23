@@ -29,7 +29,14 @@ public class AdsSelector {
     MemcachedClient tfCacheClient;
     MemcachedClient dfCacheClient;
 
-    protected AdsSelector(String memcachedServer,int memcachedPortal,int tfMemcachedPortal, int dfMemcachedPortal,String mysqlHost,String mysqlDb,String user,String pass) {
+    protected AdsSelector(String memcachedServer,
+                          int memcachedPortal,
+                          int tfMemcachedPortal,
+                          int dfMemcachedPortal,
+                          String mysqlHost,
+                          String mysqlDb,
+                          String user,
+                          String pass) {
         mMemcachedServer = memcachedServer;
         mMemcachedPortal = memcachedPortal;
         mTFMemcachedPortal = tfMemcachedPortal;
@@ -40,26 +47,41 @@ public class AdsSelector {
         mysql_pass = pass;
         String address = mMemcachedServer + ":" + mMemcachedPortal;
         try {
-            cache = new MemcachedClient(new ConnectionFactoryBuilder().setDaemon(true).setFailureMode(FailureMode.Retry).build(), AddrUtil.getAddresses(address));
+            cache = new MemcachedClient(new ConnectionFactoryBuilder()
+                    .setDaemon(true)
+                    .setFailureMode(FailureMode.Retry)
+                    .build(), AddrUtil.getAddresses(address));
         }catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         enableTFIDF = true;
         String tf_address = mMemcachedServer + ":" + mTFMemcachedPortal;
         String df_address = mMemcachedServer + ":" + mDFMemcachedPortal;
         try {
-            tfCacheClient = new MemcachedClient(new ConnectionFactoryBuilder().setDaemon(true).setFailureMode(FailureMode.Retry).build(), AddrUtil.getAddresses(tf_address));
-            dfCacheClient = new MemcachedClient(new ConnectionFactoryBuilder().setDaemon(true).setFailureMode(FailureMode.Retry).build(), AddrUtil.getAddresses(df_address));
+            tfCacheClient = new MemcachedClient(new ConnectionFactoryBuilder()
+                    .setDaemon(true)
+                    .setFailureMode(FailureMode.Retry)
+                    .build(), AddrUtil.getAddresses(tf_address));
+            dfCacheClient = new MemcachedClient(new ConnectionFactoryBuilder()
+                    .setDaemon(true)
+                    .setFailureMode(FailureMode.Retry)
+                    .build(), AddrUtil.getAddresses(df_address));
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
-    public static AdsSelector getInstance(String memcachedServer,int memcachedPortal,int tfMemcachedPortal, int dfMemcachedPortal, String mysqlHost,String mysqlDb,String user,String pass) {
+    public static AdsSelector getInstance(String memcachedServer,
+                                          int memcachedPortal,
+                                          int tfMemcachedPortal,
+                                          int dfMemcachedPortal,
+                                          String mysqlHost,
+                                          String mysqlDb,
+                                          String user,
+                                          String pass) {
         if(instance == null) {
-            instance = new AdsSelector(memcachedServer, memcachedPortal, tfMemcachedPortal, dfMemcachedPortal,mysqlHost,mysqlDb,user,pass);
+            instance = new AdsSelector(memcachedServer, memcachedPortal, tfMemcachedPortal,
+                    dfMemcachedPortal,mysqlHost,mysqlDb,user,pass);
         }
         return instance;
     }
@@ -90,9 +112,10 @@ public class AdsSelector {
             for(Long adId:matchedAds.keySet()) {
                 System.out.println("selectAds adId = " + adId);
                 MySQLAccess mysql = new MySQLAccess(mysql_host, mysql_db, mysql_user, mysql_pass);
-                Ad.Builder  ad = mysql.getAdData(adId);
+                Ad.Builder ad = mysql.getAdData(adId);
                 double relevanceScore = matchedAds.get(adId) * 1.0 / ad.getKeyWordsList().size();
-                double relevanceScoreTFIDF = getRelevanceScoreByTFIDF(adId, ad.getKeyWordsList().size(), query.getTermList());
+                double relevanceScoreTFIDF = getRelevanceScoreByTFIDF(adId, ad.getKeyWordsList().size(),
+                        query.getTermList());
                 if(enableTFIDF) {
                     ad.setRelevanceScore(relevanceScoreTFIDF);
                 } else {
@@ -105,10 +128,8 @@ public class AdsSelector {
                 adList.add(ad.build());
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -133,8 +154,7 @@ public class AdsSelector {
             double dfScore = Math.log10(numDocs * 1.0 / (dfVal + 1));
             double tfScore = Math.sqrt(tfVal);
             double norm = Math.sqrt(docLength);
-            double tfidfScore = (dfScore*tfScore) / norm;
-            return tfidfScore;
+            return (dfScore*tfScore) / norm;
         }
         return 0.0;
     }
